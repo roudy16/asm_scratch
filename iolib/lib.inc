@@ -1,19 +1,14 @@
 section .data
 _word: db 'anus ', 10, 0
+_num: db '-143',0
 
 global _start 
 _start:
-    mov rdi, word_buffer
+    mov rdi, _num
     mov rsi, 10
-    call read_word
+    call parse_int
     mov rdi, rax
-    call print_string
-    call print_newline
-    mov rdi, word_buffer
-    mov rsi, 10
-    call read_word
-    mov rdi, rax
-    call print_string
+    call print_int
     call print_newline
 
     mov rdi, 0
@@ -186,12 +181,69 @@ read_word:
 ; returns rax: number, rdx : length
 parse_uint:
     xor rax, rax
+    xor rsi, rsi
+    mov rcx, 10
+.loop:
+    mov r8, [rdi + rsi]
+    and r8, 0xff
+    cmp r8, 0x30 ; '0'
+    jl .ret
+    cmp r8, 0x39 ; '9'
+    jg .ret
+    sub r8, 0x30
+    mul rcx
+    add rax, r8
+    inc rsi
+    jmp .loop
+.ret:
+    lea rdx, [rsi]
     ret
 
 ; rdi points to a string
 ; returns rax: number, rdx : length
 parse_int:
     xor rax, rax
+    xor rsi, rsi
+    mov rcx, 10
+    mov r8, [rdi + rsi]
+    and r8, 0xff
+    cmp r8, 0x2b ; '+'
+    je .skip
+    cmp r8, 0x2d ; '-'
+    je .nskip
+    sub r8, 0x30
+    mul rcx
+    add rax, r8
+.skip:
+    inc rsi
+.ploop:
+    mov r8, [rdi + rsi]
+    and r8, 0xff
+    cmp r8, 0x30 ; '0'
+    jl .ret
+    cmp r8, 0x39 ; '9'
+    jg .ret
+    sub r8, 0x30
+    mul rcx
+    add rax, r8
+    inc rsi
+    jmp .ploop
+.nskip:
+    inc rsi
+.nloop:
+    mov r8, [rdi + rsi]
+    and r8, 0xff
+    cmp r8, 0x30 ; '0'
+    jl .ret
+    cmp r8, 0x39 ; '9'
+    jg .ret
+    sub r8, 0x30
+    mul rcx
+    sub rax, r8
+    inc rsi
+    jmp .nloop
+.ret:
+    lea rdx, [rsi]
     ret 
 
 
