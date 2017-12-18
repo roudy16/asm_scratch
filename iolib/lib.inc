@@ -1,12 +1,13 @@
 section .data
-_word: db 'anus ', 10, 0
+_word0: db 'smells', 0
+_word1: db 'smellss', 0
 _num: db '-143',0
 
 global _start 
 _start:
-    mov rdi, _num
-    mov rsi, 10
-    call parse_int
+    mov rdi, _word0
+    mov rsi, _word1
+    call string_equals
     mov rdi, rax
     call print_int
     call print_newline
@@ -90,7 +91,7 @@ print_uint:
 
 print_int:
     cmp rdi, 0
-    jg .uint
+    jge .uint
     push rdi
     mov rdi, '-'
     call print_char 
@@ -99,10 +100,6 @@ print_int:
 .uint:
     call print_uint
 .ret:
-    xor rax, rax
-    ret
-
-string_equals:
     xor rax, rax
     ret
 
@@ -246,6 +243,24 @@ parse_int:
     lea rdx, [rsi]
     ret 
 
+string_equals:
+    xor rax, rax
+    xor rcx, rcx
+.loop:
+    mov r8, [rdi + rcx]
+    mov r9, [rsi + rcx]
+    and r8, 0xff
+    and r9, 0xff
+    cmp r8, r9
+    jne .ret0
+    test r8, r8
+    jz .ret1
+    inc rcx
+    jmp .loop
+.ret1:
+    mov rax, 1
+.ret0:
+    ret
 
 string_copy:
     ret
