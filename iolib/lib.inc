@@ -2,14 +2,17 @@ section .data
 _word0: db 'smells', 0
 _word1: db 'smellss', 0
 _num: db '-143',0
+word_buffer times 256 db 0
+
 
 global _start 
 _start:
     mov rdi, _word0
-    mov rsi, _word1
-    call string_equals
-    mov rdi, rax
-    call print_int
+    mov rsi, word_buffer
+    mov rdx, 256
+    call string_copy
+    mov rdi, word_buffer
+    call print_string
     call print_newline
 
     mov rdi, 0
@@ -19,15 +22,15 @@ _start:
 section .text
 
 string_length:
+    xor rsi, rsi
     xor rax, rax
-loop:
-    mov rsi, [rdi + rax]
-    and rsi, 0xff
+.loop:
+    mov sil, byte [rdi + rax]
     test rsi, rsi
-    jz done
+    jz .done
     inc rax
-    jmp loop
-done:
+    jmp .loop
+.done:
     ret
 
 print_string:
@@ -116,9 +119,6 @@ read_char:
     mov rax, [rsi]
 .ret:
     ret 
-
-section .data
-word_buffer times 256 db 0
 
 section .text
 
@@ -263,4 +263,28 @@ string_equals:
     ret
 
 string_copy:
+    xor r8, r8
+    xor rax, rax
+.loop:
+    mov r8b, byte [rdi + rax]
+    test r8, r8
+    jz .done
+    inc rax
+    jmp .loop
+.done:
+    inc rax
+    cmp rax, rdx
+    jg .ret0
+    xor rax, rax
+.loop2:
+    mov r8b, byte [rdi + rax]
+    mov byte [rsi + rax], r8b
+    test r8, r8
+    jz .ret
+    inc rax
+    jmp .loop2
+.ret0:
+    xor rax, rax
+.ret:
     ret
+
