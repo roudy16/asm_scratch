@@ -15,7 +15,7 @@ find_word:
     cmp rax, 1
     je .found
     pop rdi
-    mov rsi, rbx
+    mov rsi, [rbx]
     jmp .loop
 .final:
     mov rbx, rsi

@@ -12,8 +12,8 @@ extern find_word
 
 global _start
 _start:
-    mov rdi, colon_last
-    mov rsi, myword
+    mov rdi, myword
+    mov rsi, colon_last
     call find_word
     
     ; exit
