@@ -1,9 +1,9 @@
-colon "first word", first_word
+colon "first", first_word
 db "one time", 0
 
-colon "second word", second_word
+colon "second", second_word
 db "two time", 0
 
-colon "third word", third_word
+colon "third", third_word
 db "three time", 0
 

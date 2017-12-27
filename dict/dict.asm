@@ -9,13 +9,15 @@ find_word:
     mov rbx, [rsi]
     test rbx, rbx
     jz .final
-    lea rsi, [rbx+8]
+    push rsi
+    add rsi, 8
     push rdi
     call string_equals
+    pop rdi
+    pop rsi
     cmp rax, 1
     je .found
-    pop rdi
-    mov rsi, [rbx]
+    mov rsi, rbx
     jmp .loop
 .final:
     mov rbx, rsi
@@ -24,7 +26,7 @@ find_word:
     test rax, rax
     jz .ret
 .found:
-    mov rax, rbx
+    mov rax, rsi
 .ret:
     pop rbx
     ret
