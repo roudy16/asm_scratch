@@ -197,15 +197,6 @@ native 'number', number
     push rax
     jmp next
 
-native 'init', init
-    mov rstack, rstack_start
-    mov [dstack_start], rsp
-    mov rax, [xt_interpreter]
-    mov qword [prog_stub], rax
-    mov pc, prog_stub
-    jmp next
-
-
 native 'bye', bye
     mov rax, 60
     xor rdi, rdi
@@ -213,6 +204,31 @@ native 'bye', bye
 
 native 'mem', mem
     push qword heap_start
+    jmp next
+
+native '!', memsetq
+    pop rdx
+    pop rax
+    mov [rax], rdx
+    jmp next
+
+native 'c!', memsetb
+    pop rdx
+    pop rax
+    mov [rax], dl
+    jmp next
+
+native '@', memgetq
+    mov rax, [rsp]
+    mov rdx, [rax]
+    mov [rsp], rdx
+    jmp next
+
+native 'c@', memgetb
+    xor rdx, rdx
+    mov rax, [rsp]
+    mov dl, byte [rax]
+    mov [rsp], rdx
     jmp next
 
 native 'inbuf', inbuf
@@ -249,6 +265,14 @@ native '.S', .S
     pop rbx
     jmp next
     
+native 'init', init
+    mov rstack, rstack_start
+    mov [dstack_start], rsp
+    mov rax, [xt_interpreter]
+    mov qword [prog_stub], rax
+    mov pc, prog_stub
+    jmp next
+
 
 interp_loop:
     mov rdi, input_buf
