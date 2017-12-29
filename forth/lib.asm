@@ -105,13 +105,13 @@ print_int:
     ret
 
 read_char:
-    mov rax, 0
-    mov rdi, 0
+    xor rax, rax
+    xor rdi, rdi
     push rax
     mov rsi, rsp
     mov rdx, 1
     syscall 
-    pop rdi
+    add rsp, 8
     test rax, rax
     jz .ret
     mov rax, [rsi]

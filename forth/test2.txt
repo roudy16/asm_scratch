@@ -1,0 +1,1 @@
+1 2 swap 3 rot dup . . . 8 .S

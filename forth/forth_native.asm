@@ -178,6 +178,25 @@ native '.', dot
     call print_newline
     jmp next
 
+native 'key', key
+    call read_char
+    push rax
+    jmp next
+
+native 'emit', emit
+    pop rdi
+    call print_char
+    jmp next
+
+native 'number', number
+    mov rdi, input_buf
+    mov rsi, input_buf_size_bytes
+    call read_word
+    mov rdi, input_buf
+    call parse_int
+    push rax
+    jmp next
+
 native 'init', init
     mov rstack, rstack_start
     mov [dstack_start], rsp
@@ -221,7 +240,7 @@ native '.S', .S
     jge .end
     push rax
     mov rdi, [rax]
-    call print_uint
+    call print_int
     call print_newline
     pop rax
     add rax, 8
