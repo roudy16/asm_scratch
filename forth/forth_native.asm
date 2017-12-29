@@ -24,6 +24,8 @@ input_buf: resb input_buf_size_bytes
 
 section .data
 
+dict_last_word: dq 0
+heap_first_free: dq 0
 dstack_start: dq 0
 prog_stub: dq 0
 xt_interpreter: dq .interpreter
@@ -64,8 +66,7 @@ docol:
     mov pc, w
     jmp next
 
-global exit
-exit:
+native 'exit', exit
     mov pc, [rstack]
     add rstack, 8
     jmp next
@@ -80,13 +81,13 @@ native '-', minus
     sub [rsp], rax
     jmp next
 
-native '*', mult
+native '*', mul
     pop rax
     imul rax, [rsp]
     mov [rsp], rax
     jmp next
 
-native '/', divd
+native '/', div
     pop rcx
     xor rdx, rdx
     mov rax, [rsp]
@@ -94,7 +95,7 @@ native '/', divd
     mov [rsp], rax
     jmp next
 
-native '=', equals
+native '=', eq
     pop rax
     mov rcx, [rsp]
     push rax
@@ -104,7 +105,7 @@ native '=', equals
     push rdx
     jmp next
 
-native '<', lt
+native '<', less
     mov rax, [rsp]
     mov rcx, [rsp+1]
     xor rdx, rdx
@@ -113,7 +114,7 @@ native '<', lt
     push rdx
     jmp next
 
-native 'and', land
+native 'and', and
     pop rax
     pop rcx
     test rax, rax
@@ -125,7 +126,7 @@ native 'and', land
     push rdx
     jmp next
 
-native 'not', lnot
+native 'not', not
     pop rax
     xor rdx, rdx
     test rax, rax
@@ -264,15 +265,24 @@ native '.S', .S
 .end:
     pop rbx
     jmp next
-    
-native 'init', init
-    mov rstack, rstack_start
-    mov [dstack_start], rsp
-    mov rax, [xt_interpreter]
-    mov qword [prog_stub], rax
-    mov pc, prog_stub
-    jmp next
 
+colon 'or', or
+    dq xt_not
+    dq xt_not
+    dq xt_swap
+    dq xt_not
+    dq xt_not
+    dq xt_plus
+    dq xt_not
+    dq xt_not
+    dq xt_exit
+
+colon '>', greater
+    dq xt_swap
+    dq xt_less
+    dq xt_exit
+
+section .text
 
 interp_loop:
     mov rdi, input_buf
@@ -324,3 +334,14 @@ exit_error:
     mov rdi, 1
     syscall
     
+; This entry needs to be the last of the file so that the address
+; of 'words_last' is properly set to the end of the dictionary list
+native 'init', init
+    mov qword [dict_last_word], words_last
+    mov qword [heap_first_free], heap_start
+    mov rstack, rstack_start
+    mov [dstack_start], rsp
+    mov rax, [xt_interpreter]
+    mov qword [prog_stub], rax
+    mov pc, prog_stub
+    jmp next
