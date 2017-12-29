@@ -1,7 +1,13 @@
 AFLAGS=-felf64
 ASM=nasm
 
-all: main
+all: forth
+
+forth: lib.o dict.o forth.o
+	ld -o forth forth.o dict.o lib.o
+
+forth.o: forth_native.asm macros.inc
+	$(ASM) $(AFLAGS) forth_native.asm -o forth.o
 
 main: main.o dict.o lib.o
 	ld -o main main.o dict.o lib.o
@@ -17,4 +23,4 @@ dict.o: dict.asm
 
 
 clean:
-	rm -f main.o lib.o dict.o main
+	rm -f main.o lib.o dict.o main forth.o forth

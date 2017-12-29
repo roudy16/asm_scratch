@@ -4,18 +4,18 @@ _word1: db 'smellss', 0
 _num: db '-143',0
 word_buffer times 256 db 0
 
-global string_length:
-global print_string:
-global print_char:
-global print_newline:
-global print_uint:
-global print_int:
-global read_char:
-global read_word:
-global parse_uint:
-global parse_int:
-global string_equals:
-global string_copy:
+global string_length
+global print_string
+global print_char
+global print_newline
+global print_uint
+global print_int
+global read_char
+global read_word
+global parse_uint
+global parse_int
+global string_equals
+global string_copy
 
 section .text
 
