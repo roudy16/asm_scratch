@@ -75,6 +75,35 @@ native  '+', plus
     add [rsp], rax
     jmp next
 
+native '-', minus
+    pop rax
+    sub [rsp], rax
+    jmp next
+
+native '*', mult
+    pop rax
+    imul rax, [rsp]
+    mov [rsp], rax
+    jmp next
+
+native '/', divd
+    pop rcx
+    xor rdx, rdx
+    mov rax, [rsp]
+    idiv rcx
+    mov [rsp], rax
+    jmp next
+
+native '=', equals
+    pop rax
+    mov rcx, [rsp]
+    push rax
+    xor rdx, rdx
+    cmp rcx, rax
+    sete dl
+    push rdx
+    jmp next
+
 native 'init', init
     mov rstack, rstack_start
     mov [dstack_start], rsp
@@ -124,7 +153,7 @@ native '.S', .S
     call print_uint
     call print_newline
     pop rax
-    inc rax
+    add rax, 8
     jmp .loop
 .end:
     pop rbx

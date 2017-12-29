@@ -191,7 +191,7 @@ parse_uint:
     inc rsi
     jmp .loop
 .ret:
-    lea rdx, [rsi]
+    mov rdx, rsi
     ret
 
 ; rdi points to a string
@@ -206,6 +206,10 @@ parse_int:
     je .skip
     cmp r8, 0x2d ; '-'
     je .nskip
+    cmp r8, 0x30 ; '0'
+    jl .ret
+    cmp r8, 0x39 ; '9'
+    jg .ret
     sub r8, 0x30
     mul rcx
     add rax, r8
@@ -238,7 +242,7 @@ parse_int:
     inc rsi
     jmp .nloop
 .ret:
-    lea rdx, [rsi]
+    mov rdx, rsi
     ret 
 
 string_equals:
