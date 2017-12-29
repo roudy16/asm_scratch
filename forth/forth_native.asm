@@ -105,9 +105,8 @@ native '=', equals
     jmp next
 
 native '<', lt
-    pop rax
-    mov rcx, [rsp]
-    push rax
+    mov rax, [rsp]
+    mov rcx, [rsp+1]
     xor rdx, rdx
     cmp rax, rcx
     setl dl
@@ -134,6 +133,51 @@ native 'not', lnot
     push rdx
     jmp next
 
+native 'drop', drop
+    add rsp, 8
+    jmp next
+
+native 'dup', dup
+    mov rax, [rsp]
+    push rax
+    jmp next
+
+native 'swap', swap
+    mov rax, [rsp]
+    mov rdx, [rsp+8]
+    mov [rsp+8], rax
+    mov [rsp], rdx
+    jmp next
+
+native 'rot', rot
+    mov rax, rsp
+    mov rdx, [dstack_start]
+    add rax, 8
+    sub rdx, 8
+    cmp rax, rdx
+    jge .ret
+    mov r9, [rsp]
+    sub rdx, 8
+    mov r8, [rax]
+    mov [rax-8], r8
+.loop:
+    mov r8, [rax+8]
+    mov [rax], r8
+    cmp rax, rdx
+    jge .ret1
+    add rax, 8
+    jmp .loop
+.ret1:
+    mov [rdx+8], r9
+.ret:
+    jmp next
+
+native '.', dot
+    pop rdi
+    call print_int
+    call print_newline
+    jmp next
+
 native 'init', init
     mov rstack, rstack_start
     mov [dstack_start], rsp
@@ -142,9 +186,6 @@ native 'init', init
     mov pc, prog_stub
     jmp next
 
-native 'drop', drop
-    add rsp, 8
-    jmp next
 
 native 'bye', bye
     mov rax, 60
