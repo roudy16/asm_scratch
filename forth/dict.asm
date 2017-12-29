@@ -23,8 +23,10 @@ find_word:
     jmp .loop
 .final:
     mov rbx, rsi
+    push rsi
     add rsi, 8
     call string_equals
+    pop rsi
     test rax, rax
     jz .ret
 .found:
