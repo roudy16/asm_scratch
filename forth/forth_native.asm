@@ -104,6 +104,36 @@ native '=', equals
     push rdx
     jmp next
 
+native '<', lt
+    pop rax
+    mov rcx, [rsp]
+    push rax
+    xor rdx, rdx
+    cmp rax, rcx
+    setl dl
+    push rdx
+    jmp next
+
+native 'and', land
+    pop rax
+    pop rcx
+    test rax, rax
+    setnz dl
+    xor rax, rax
+    test rcx, rcx
+    setnz al
+    and rdx, rdx
+    push rdx
+    jmp next
+
+native 'not', lnot
+    pop rax
+    xor rdx, rdx
+    test rax, rax
+    setz dl
+    push rdx
+    jmp next
+
 native 'init', init
     mov rstack, rstack_start
     mov [dstack_start], rsp
