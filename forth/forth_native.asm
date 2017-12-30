@@ -284,24 +284,26 @@ native ':', col
     add rsi, 8
     pop rdi ; ptr to word in input_duf
     push rsi
-    push rax
     mov rdx, rax ; length of word in input_buf
     inc rdx ; account for null char
+    push rdx
     call string_copy ; copy the input word to new word entry in heap
+    pop rdx
     pop rax
-    pop rsi
-    add rsi, rax ; ptr to one past end of new word string
-    mov qword [rsi], docol
-    add rsi, 8
+    add rax, rdx ; ptr to one past end of new word string
+    mov byte [rax], 0 ; set flags
+    inc rax
+    mov qword [rax], docol
+    add rax, 8
     mov qword [forth_state] , 1 ; set state to indicate 'compiler' mode
-    mov [heap_first_free], rsi
+    mov [heap_first_free], rax
     jmp next
 
 native ';', semicol
     mov rdx, [forth_state] ; check state flag to see if we're in compile mode
     test rdx, rdx
     jz next ; do nothing if we're in interpreter mode
-    mov rax, heap_first_free
+    mov rax, [heap_first_free]
     mov qword [rax], xt_exit
     add rax, 8
     mov [heap_first_free], rax
@@ -343,7 +345,7 @@ interpreter_loop:
     test rax, rax
     jz bye_impl ; normal exit
     push rdi
-    mov rsi, words_last
+    mov rsi, [dict_last_word]
     call find_word
     pop rdi
     test rax, rax
@@ -372,7 +374,47 @@ interpreter_loop:
     jmp interpreter_loop
 
 compiler_loop:
+    mov rdi, input_buf
+    mov rsi, input_buf_size_bytes
+    call read_word
+    test rax, rax
+    jz exit_error
+    mov rdi, rax
+    push rdi
+    call string_length
+    pop rdi
+    test rax, rax
+    jz bye_impl ; normal exit
+    push rdi
+    mov rsi, [dict_last_word]
+    call find_word
+    pop rdi
+    test rax, rax
+    jz exit_unk_word
+    mov rdi, rax
+    call cfa
+    mov rdx, xt_semicol
+    cmp rax, rdx
+    je semicol_impl
+    mov r8, heap_first_free
+    mov r9, [r8]
+    mov [r9], rax
+    add r9, 8
+    mov [r8], r9
+    mov r9, [xt_interpreter]
+    mov qword [prog_stub], r9
+    mov pc, prog_stub
+    jmp next
 
+exit_unk_word:
+    push rdi
+    mov rdi, unk_word_msg
+    call print_string
+    call print_newline
+    pop rdi
+    call print_string
+    call print_newline
+    jmp interpreter_loop
 
 exit_error:
     mov rdi, error_msg

@@ -1,1 +1,1 @@
-: double dup + + ; 8 3 double .S
+: double dup + ; 8 3 double .S
