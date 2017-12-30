@@ -24,12 +24,13 @@ input_buf: resb input_buf_size_bytes
 
 section .data
 
-dict_last_word: dq 0
-heap_first_free: dq 0
-dstack_start: dq 0
-prog_stub: dq 0
+forth_state: dq 0 ; 0: interpreter mode, 1: compiler mode
+dict_last_word: dq 0 ; ptr to last word in dictionary list
+heap_first_free: dq 0 ; ptr to first free byte in forth mem
+dstack_start: dq 0 ; base ptr for data stack
+prog_stub: dq 0 ; used in interpreter mode to mark next execution token
 xt_interpreter: dq .interpreter
-.interpreter: dq interp_loop
+.interpreter: dq interpreter_loop
 
 section .text
 
@@ -266,6 +267,47 @@ native '.S', .S
     pop rbx
     jmp next
 
+native ':', col
+    mov rdi, input_buf
+    mov rsi, input_buf_size_bytes
+    call read_word
+    test rax, rax
+    jz exit_error
+    mov rdi, input_buf
+    push rdi
+    call string_length
+    mov rsi, [heap_first_free]
+    mov r8, dict_last_word
+    mov r9, [r8]
+    mov [rsi], r9 ; set ptr to prev word in dict list
+    mov [r8], rsi ; update dict_last_word to this new word
+    add rsi, 8
+    pop rdi ; ptr to word in input_duf
+    push rsi
+    push rax
+    mov rdx, rax ; length of word in input_buf
+    inc rdx ; account for null char
+    call string_copy ; copy the input word to new word entry in heap
+    pop rax
+    pop rsi
+    add rsi, rax ; ptr to one past end of new word string
+    mov qword [rsi], docol
+    add rsi, 8
+    mov qword [forth_state] , 1 ; set state to indicate 'compiler' mode
+    mov [heap_first_free], rsi
+    jmp next
+
+native ';', semicol
+    mov rdx, [forth_state] ; check state flag to see if we're in compile mode
+    test rdx, rdx
+    jz next ; do nothing if we're in interpreter mode
+    mov rax, heap_first_free
+    mov qword [rax], xt_exit
+    add rax, 8
+    mov [heap_first_free], rax
+    mov qword [forth_state], 0
+    jmp next
+
 colon 'or', or
     dq xt_not
     dq xt_not
@@ -282,9 +324,13 @@ colon '>', greater
     dq xt_less
     dq xt_exit
 
+
 section .text
 
-interp_loop:
+interpreter_loop:
+    mov rax, [forth_state] ; check state flag to see if we're in compile mode
+    test rax, rax
+    jnz compiler_loop
     mov rdi, input_buf
     mov rsi, input_buf_size_bytes
     call read_word
@@ -314,7 +360,7 @@ interp_loop:
     test rdx, rdx
     jz .unk_word
     push rax ; push integer to forth data stack
-    jmp interp_loop
+    jmp interpreter_loop
 .unk_word:
     push rdi
     mov rdi, unk_word_msg
@@ -323,7 +369,9 @@ interp_loop:
     pop rdi
     call print_string
     call print_newline
-    jmp interp_loop
+    jmp interpreter_loop
+
+compiler_loop:
 
 
 exit_error:
@@ -337,6 +385,7 @@ exit_error:
 ; This entry needs to be the last of the file so that the address
 ; of 'words_last' is properly set to the end of the dictionary list
 native 'init', init
+    mov qword [forth_state], 0
     mov qword [dict_last_word], words_last
     mov qword [heap_first_free], heap_start
     mov rstack, rstack_start
